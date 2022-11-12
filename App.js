@@ -22,46 +22,37 @@ function openDatabase() {
     };
   }
 
-  const db = SQLite.openDatabase("test-database.db");
+  const db = SQLite.openDatabase("test-database.sqlite");
   return db;
 }
 
 const db = openDatabase();
 
-function Items({ done: doneHeading, onPressItem }) {
+function Items({onPressItem}) {
   const [items, setItems] = useState(null);
-
   useEffect(() => {
     db.transaction((tx) => {
       tx.executeSql(
-        `select * from items where done = ?;`,
-        [doneHeading ? 1 : 0],
+        "select * from users2",[],
         (_, { rows: { _array } }) => setItems(_array)
-      );
-    });
-  }, []);
-
-  const heading = doneHeading ? "Completed" : "Todo";
-
-  if (items === null || items.length === 0) {
-    return null;
-  }
+        );
+      });
+    }, []);
+    console.log(items)
 
   return (
     <View style={styles.sectionContainer}>
-      <Text style={styles.sectionHeading}>{heading}</Text>
-      {items.map(({ id, done, value }) => (
+      {items && items.map(({ id, name }) => (
         <TouchableOpacity
           key={id}
           onPress={() => onPressItem && onPressItem(id)}
           style={{
-            backgroundColor: done ? "#1c9963" : "#fff",
             borderColor: "#000",
             borderWidth: 1,
             padding: 8,
           }}
         >
-          <Text style={{ color: done ? "#fff" : "#000" }}>{value}</Text>
+          <Text>{name}</Text>
         </TouchableOpacity>
       ))}
     </View>
@@ -70,27 +61,26 @@ function Items({ done: doneHeading, onPressItem }) {
 
 export default function App() {
   const [text, setText] = useState(null);
+  const [name, setName] = useState(null);
+  const [email, setEmail] = useState(null);
+  const [senha, setSenha] = useState(null);
   const [forceUpdate, forceUpdateId] = useForceUpdate();
 
   useEffect(() => {
     db.transaction((tx) => {
       tx.executeSql(
-        "create table if not exists items (id integer primary key not null, done int, value text);"
+        "create table if not exists users2 (id integer primary key not null, name text, email text, password text);"
       );
     });
   }, []);
-
-  const add = (text) => {
+  const add = (name,email,senha) => {
     // is text empty?
-    if (text === null || text === "") {
-      return false;
-    }
 
     db.transaction(
       (tx) => {
-        tx.executeSql("insert into items (done, value) values (0, ?)", [text]);
-        tx.executeSql("select * from items", [], (_, { rows }) =>
-          console.log(JSON.stringify(rows))
+        tx.executeSql("insert into users2 (name,email,password) values (?,?,?)", [name,email,senha]);
+        tx.executeSql("select * from users2", [], (_, { rows }) =>
+          console.log('rows',JSON.stringify(rows))
         );
       },
       null,
@@ -100,9 +90,8 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>SQLite Example</Text>
 
-      {Platform.OS === "web" ? (
+      {/* {Platform.OS === "web" ? (
         <View
           style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
         >
@@ -127,11 +116,10 @@ export default function App() {
           <ScrollView style={styles.listArea}>
             <Items
               key={`forceupdate-todo-${forceUpdateId}`}
-              done={false}
               onPressItem={(id) =>
                 db.transaction(
                   (tx) => {
-                    tx.executeSql(`update items set done = 1 where id = ?;`, [
+                    tx.executeSql(`update users2 set name = 'opa' where id = ?;`, [
                       id,
                     ]);
                   },
@@ -141,12 +129,11 @@ export default function App() {
               }
             />
             <Items
-              done
               key={`forceupdate-done-${forceUpdateId}`}
               onPressItem={(id) =>
                 db.transaction(
                   (tx) => {
-                    tx.executeSql(`delete from items where id = ?;`, [id]);
+                    tx.executeSql(`delete from users2 where id = ?;`, [id]);
                   },
                   null,
                   forceUpdate
@@ -155,7 +142,46 @@ export default function App() {
             />
           </ScrollView>
         </>
-      )}
+      )} */}
+      <TextInput
+        onChangeText={(text) => setName(text)}
+        placeholder="name"
+        style={styles.input}
+        value={name}
+/>  
+        <TextInput
+        onChangeText={(text) => setEmail(text)}
+        placeholder="email"
+        style={styles.input}
+        value={email}
+        /> 
+        <TextInput
+        onChangeText={(text) => setSenha(text)}
+        onSubmitEditing={() => {
+          add(name,email,senha);
+          setText(null);
+        }}
+        placeholder="senha"
+        style={styles.input}
+        value={senha}
+        /> 
+        <TouchableOpacity onPress={()=>{add(name,email,senha);}}><Text>Salvar</Text></TouchableOpacity>
+        <ScrollView style={styles.listArea}>
+            <Items
+              key={`forceupdate-todo-${forceUpdateId}`}
+              onPressItem={(id) =>
+                db.transaction(
+                  (tx) => {
+                    tx.executeSql(`update users2 set name = 'opa' where id = ?;`, [
+                      id,
+                    ]);
+                  },
+                  null,
+                  forceUpdate
+                )
+              }
+            />
+          </ScrollView>
     </View>
   );
 }
@@ -183,7 +209,6 @@ const styles = StyleSheet.create({
     borderColor: "#4630eb",
     borderRadius: 4,
     borderWidth: 1,
-    flex: 1,
     height: 48,
     margin: 16,
     padding: 8,

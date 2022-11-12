@@ -30,11 +30,12 @@ const db = openDatabase();
 
 function Items({ done: doneHeading, onPressItem }) {
   const [items, setItems] = useState(null);
-  console.log(items)
+
   useEffect(() => {
     db.transaction((tx) => {
       tx.executeSql(
-        `select * from users;`,
+        `select * from items where done = ?;`,
+        [doneHeading ? 1 : 0],
         (_, { rows: { _array } }) => setItems(_array)
       );
     });
@@ -49,18 +50,18 @@ function Items({ done: doneHeading, onPressItem }) {
   return (
     <View style={styles.sectionContainer}>
       <Text style={styles.sectionHeading}>{heading}</Text>
-      {items.map(({ id, name }) => (
+      {items.map(({ id, done, value }) => (
         <TouchableOpacity
           key={id}
           onPress={() => onPressItem && onPressItem(id)}
           style={{
-            backgroundColor: "#fff",
+            backgroundColor: done ? "#1c9963" : "#fff",
             borderColor: "#000",
             borderWidth: 1,
             padding: 8,
           }}
         >
-          <Text>{name}</Text>
+          <Text style={{ color: done ? "#fff" : "#000" }}>{value}</Text>
         </TouchableOpacity>
       ))}
     </View>
@@ -71,6 +72,14 @@ export default function App() {
   const [text, setText] = useState(null);
   const [forceUpdate, forceUpdateId] = useForceUpdate();
 
+  useEffect(() => {
+    db.transaction((tx) => {
+      tx.executeSql(
+        "create table if not exists items (id integer primary key not null, done int, value text);"
+      );
+    });
+  }, []);
+
   const add = (text) => {
     // is text empty?
     if (text === null || text === "") {
@@ -79,8 +88,8 @@ export default function App() {
 
     db.transaction(
       (tx) => {
-        tx.executeSql("insert into users (id, name) values (2, ?)", [text]);
-        tx.executeSql("select * from users", [], (_, { rows }) =>
+        tx.executeSql("insert into items (done, value) values (0, ?)", [text]);
+        tx.executeSql("select * from items", [], (_, { rows }) =>
           console.log(JSON.stringify(rows))
         );
       },
@@ -122,7 +131,7 @@ export default function App() {
               onPressItem={(id) =>
                 db.transaction(
                   (tx) => {
-                    tx.executeSql(`update users set name = 'opa' where id = 1;`, [
+                    tx.executeSql(`update items set done = 1 where id = ?;`, [
                       id,
                     ]);
                   },
@@ -137,7 +146,7 @@ export default function App() {
               onPressItem={(id) =>
                 db.transaction(
                   (tx) => {
-                    tx.executeSql(`delete from users where id = ?;`, [id]);
+                    tx.executeSql(`delete from items where id = ?;`, [id]);
                   },
                   null,
                   forceUpdate
