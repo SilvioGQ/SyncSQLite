@@ -5,8 +5,8 @@ export async function Pull() {
     try{
         // if (!(await FileSystem.getInfoAsync(FileSystem.documentDirectory + 'db.sqlite')).exists) {
         //     await FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + 'db.sqlite');
-        //   }
-        //await FileSystem.downloadAsync(`${BASE_API}/sync`,DEFAULT_DATABASE_PATH + 'db.sqlite')
+        //  }
+        await FileSystem.downloadAsync(`${BASE_API}/sync`,DEFAULT_DATABASE_PATH + 'db.sqlite')
         return 'db.sqlite'
     }
     catch(err){
