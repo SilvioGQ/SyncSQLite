@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import Constants from "expo-constants";
 import * as SQLite from "expo-sqlite";
-import { Pull } from './pages/api'
+import { Pull,Push } from './pages/api'
 
 
 export default function App() {
@@ -20,7 +20,7 @@ export default function App() {
   const [email, setEmail] = useState(null);
   const [senha, setSenha] = useState(null);
   const [db,setDb] =useState(null)
-  console.log(items)
+  //console.log(items)
   async function getDatabase() {
     const uri_Database=await Pull()
     if(uri_Database){
@@ -67,7 +67,7 @@ export default function App() {
     if(!db) return
     db.transaction(
       (tx) => {
-        tx.executeSql("insert into users (name,email,password) values (?,?,?)", [name,email,senha]);
+        tx.executeSql("insert into users (name,email,password,createdAt,updatedAt) values (?,?,?,?,?)", [name,email,senha,new Date().toISOString(),new Date().toISOString()]);
         tx.executeSql(
           "select * from users", [], 
           (_, { rows: { _array } }) => setItems(_array)
@@ -101,7 +101,7 @@ export default function App() {
         style={styles.input}
         value={senha}
         /> 
-        <TouchableOpacity onPress={()=>{add(name,email,senha);}}><Text>Salvar</Text></TouchableOpacity>
+        <TouchableOpacity onPress={()=>{add(name,email,senha);}}><Text>Adicionar</Text></TouchableOpacity>
         <ScrollView style={styles.listArea}>
             <Items
             key={Math.random()*3}
@@ -137,8 +137,10 @@ export default function App() {
             null
           )
         }}>
-          <Text>Salvar</Text>
-
+          <Text>Update</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={async ()=>{await Push()}}>
+          <Text>Push</Text>
         </TouchableOpacity>
     </View>
   );
