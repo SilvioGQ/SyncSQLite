@@ -4,16 +4,17 @@ import * as axios from 'axios'
 const BASE_API = 'http://localhost:3001';
 const DEFAULT_DATABASE_PATH=`${FileSystem.documentDirectory}/SQLite/`
 export async function Pull() {
-    try{
-        // if (!(await FileSystem.getInfoAsync(FileSystem.documentDirectory + 'db.sqlite')).exists) {
-        //     await FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + 'db.sqlite');
-        //  }
-        //await FileSystem.downloadAsync(`${BASE_API}/sync`,DEFAULT_DATABASE_PATH + 'db.sqlite')
-        return 'db.sqlite'
-    }
-    catch(err){
-        console.log(err)
-    }
+    console.log("faz o pull mermão")
+    let dirs = RNFetchBlob.fs.dirs
+    const res=await RNFetchBlob.config({
+      // response data will be saved to this path if it has access right.
+      path : dirs.DocumentDir +'/SQLite/db.sqlite'
+    })
+    .fetch('GET', `${BASE_API}/sync`, {
+      //some headers ..
+    })
+    console.log(res.path())
+    return "db.sqlite"
 }
 export async function Push() {
     try{
